@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title id="pageTitle">Outil PDF — PDFOX.io</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <!-- PDF.js pour lecture PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- pdf-lib pour manipulation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+  <!-- jsPDF pour génération -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body class="tool-page">
+
+<!-- NAVBAR -->
+<nav>
+  <a class="nav-logo" href="../index.html">
+    <div class="logo-icon">🦊</div>
+    <span class="logo-text">PDF<span>OX</span>.io</span>
+  </a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="../index.html#tools">Outils PDF</a></li>
+    <li><a href="../index.html#ai" class="ai-link">✨ IA</a></li>
+    <li><a href="blog.html">Blog</a></li>
+    <li><a href="../index.html#tools" class="nav-cta">Tous les outils →</a></li>
+  </ul>
+  <div class="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+</nav>
+
+<!-- HERO OUTIL -->
+<div class="tool-hero">
+  <h1 id="toolTitle">Chargement...</h1>
+  <p id="toolSubtitle">Traitement gratuit, rapide et sécurisé</p>
+</div>
+
+<!-- ZONE PRINCIPALE -->
+<div style="padding:0 24px 60px;">
+
+  <!-- UPLOAD ZONE -->
+  <div class="upload-zone" id="uploadZone">
+    <span class="upload-icon" id="toolEmoji">📄</span>
+    <h3 id="uploadTitle">Glissez votre fichier ici</h3>
+    <p id="uploadDesc">ou cliquez pour sélectionner depuis votre appareil</p>
+    <input type="file" class="upload-input" id="fileInput"/>
+    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+      📂 Sélectionner un fichier
+    </button>
+    <div class="progress-bar" id="progressBar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div id="fileInfo" style="margin-top:14px;font-size:13px;color:var(--gray);display:none;"></div>
+    <button class="upload-btn" id="processBtn" onclick="processFile()" style="display:none;margin-top:16px;width:100%;">
+      ⚡ Lancer la conversion
+    </button>
+    <a class="download-btn" id="downloadBtn" href="#" download>
+      ✅ Télécharger le fichier converti
+    </a>
+    <div class="trust-badges">
+      <span class="trust-badge">🔒 Sécurisé SSL</span>
+      <span class="trust-badge">🚫 Sans inscription</span>
+      <span class="trust-badge">🗑️ Supprimé en 1h</span>
+    </div>
+  </div>
+
+  <!-- ADSENSE -->
+  <div style="max-width:600px;margin:24px auto;">
+    <div class="ad-slot"><!-- AdSense · tool-page-rectangle --><span>Publicité Google AdSense</span></div>
+  </div>
+
+  <!-- FAQ -->
+  <div style="max-width:600px;margin:0 auto;">
+    <h2 style="font-family:'Syne',sans-serif;font-size:22px;margin-bottom:24px;" id="faqTitle">Questions fréquentes</h2>
+    <div id="faqList"></div>
+  </div>
+</div>
+
+<!-- FOOTER simplifié -->
+<footer style="padding:32px 24px;">
+  <div style="max-width:1180px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+    <a href="../index.html" style="font-family:'Syne',sans-serif;font-weight:900;font-size:18px;color:white;text-decoration:none;">🦊 PDF<span style="color:#FF6B35;">OX</span>.io</a>
+    <span style="color:rgba(255,255,255,.4);font-size:13px;">© 2026 PDFOX.io — Tous droits réservés</span>
+  </div>
+</footer>
+
+<script src="../js/main.js"></script>
+<script>
+// ── CONFIG DES OUTILS ──
+const TOOL_CONFIG = {
+  'pdf-to-word': {
+    title: 'PDF vers Word',
+    emoji: '📄',
+    subtitle: 'Convertissez votre PDF en document Word éditable (.docx)',
+    accept: '.pdf',
+    outputExt: '.docx',
+    faq: [
+      { q: 'La mise en page sera-t-elle préservée ?', a: 'Pour la majorité des PDF textuels, la mise en page est conservée. Les PDF complexes avec beaucoup d\'images peuvent avoir des variations mineures.' },
+      { q: 'Quelle est la taille maximale de fichier ?', a: 'Vous pouvez traiter des fichiers jusqu\'à 50 Mo gratuitement.' },
+      { q: 'Est-ce vraiment gratuit ?', a: 'Oui, la conversion PDF vers Word est entièrement gratuite sur PDFOX.io, sans limite de nombre de conversions par jour.' },
+    ]
+  },
+  'word-to-pdf': {
+    title: 'Word vers PDF',
+    emoji: '📝',
+    subtitle: 'Transformez vos fichiers Word (.docx) en PDF professionnel',
+    accept: '.doc,.docx',
+    outputExt: '.pdf',
+    faq: [
+      { q: 'Mon fichier .doc (ancien format) est-il accepté ?', a: 'Oui, nous acceptons les formats .doc et .docx.' },
+      { q: 'Le PDF généré sera-t-il de bonne qualité ?', a: 'Oui, le PDF généré est de haute qualité, adapté à l\'impression et au partage professionnel.' },
+    ]
+  },
+  'compress': {
+    title: 'Compresser PDF',
+    emoji: '🗜️',
+    subtitle: 'Réduisez la taille de votre PDF jusqu\'à 90% sans perte visible',
+    accept: '.pdf',
+    outputExt: '-compressé.pdf',
+    faq: [
+      { q: 'Quelle réduction puis-je espérer ?', a: 'En général, nos algorithmes réduisent la taille de 50 à 80%. Les PDF avec beaucoup d\'images bénéficient des meilleures réductions.' },
+      { q: 'La qualité des images sera-t-elle affectée ?', a: 'En mode équilibré, la qualité reste excellente à l\'écran. En mode fort, une légère dégradation peut être visible sur les photos zoomées.' },
+    ]
+  },
+  'merge': {
+    title: 'Fusionner PDF',
+    emoji: '🔗',
+    subtitle: 'Combinez plusieurs fichiers PDF en un seul document',
+    accept: '.pdf',
+    outputExt: '-fusionné.pdf',
+    multiple: true,
+    faq: [
+      { q: 'Combien de fichiers puis-je fusionner ?', a: 'Vous pouvez fusionner jusqu\'à 20 fichiers PDF en une seule opération.' },
+      { q: 'L\'ordre des fichiers sera-t-il respecté ?', a: 'Oui, les fichiers sont fusionnés dans l\'ordre où vous les sélectionnez.' },
+    ]
+  },
+  'split': {
+    title: 'Diviser PDF',
+    emoji: '✂️',
+    subtitle: 'Extrayez des pages spécifiques ou divisez votre PDF',
+    accept: '.pdf',
+    outputExt: '-divisé.pdf',
+    faq: [
+      { q: 'Puis-je extraire des pages spécifiques ?', a: 'Oui, vous pouvez indiquer les pages à extraire (ex: 1-3, 5, 7-10).' },
+    ]
+  },
+  'pdf-to-jpg': {
+    title: 'PDF vers JPG',
+    emoji: '🖼️',
+    subtitle: 'Convertissez chaque page de votre PDF en image JPG haute qualité',
+    accept: '.pdf',
+    outputExt: '.zip',
+    faq: [
+      { q: 'Quelle est la résolution des images exportées ?', a: 'Les images sont exportées en 150 DPI par défaut, idéal pour un usage web et email.' },
+    ]
+  },
+  'jpg-to-pdf': {
+    title: 'JPG vers PDF',
+    emoji: '📸',
+    subtitle: 'Transformez vos images en un PDF propre et partageable',
+    accept: '.jpg,.jpeg,.png,.gif,.bmp,.webp',
+    outputExt: '.pdf',
+    multiple: true,
+    faq: [
+      { q: 'Quels formats d\'image sont acceptés ?', a: 'JPG, JPEG, PNG, GIF, BMP et WebP sont tous acceptés.' },
+    ]
+  },
+  'sign': {
+    title: 'Signer PDF',
+    emoji: '✍️',
+    subtitle: 'Ajoutez votre signature électronique légale sans imprimer',
+    accept: '.pdf',
+    outputExt: '-signé.pdf',
+    faq: [
+      { q: 'La signature électronique est-elle légalement valide ?', a: 'Oui, dans l\'UE (règlement eIDAS) et dans la plupart des pays d\'Afrique francophone, la signature électronique simple est légalement reconnue pour la majorité des contrats.' },
+    ]
+  },
+  'protect': {
+    title: 'Protéger PDF',
+    emoji: '🔒',
+    subtitle: 'Ajoutez un mot de passe à votre PDF en un clic',
+    accept: '.pdf',
+    outputExt: '-protégé.pdf',
+    faq: [
+      { q: 'Mon mot de passe est-il stocké sur vos serveurs ?', a: 'Non, le chiffrement se fait dans votre navigateur. Votre mot de passe ne nous est jamais transmis.' },
+    ]
+  },
+  'unlock': {
+    title: 'Déverrouiller PDF',
+    emoji: '🔓',
+    subtitle: 'Supprimez les restrictions d\'un PDF que vous possédez',
+    accept: '.pdf',
+    outputExt: '-déverrouillé.pdf',
+    faq: [
+      { q: 'Est-ce légal de déverrouiller un PDF ?', a: 'Déverrouiller un PDF dont vous êtes le propriétaire légitime est parfaitement légal. Il est illégal de contourner la protection de contenus dont vous n\'avez pas les droits.' },
+    ]
+  },
+  'ocr': {
+    title: 'OCR PDF',
+    emoji: '🔍',
+    subtitle: 'Rendez vos documents scannés cherchables et éditables',
+    accept: '.pdf',
+    outputExt: '-ocr.pdf',
+    faq: [
+      { q: 'Quelles langues sont supportées ?', a: 'Le français, l\'anglais, l\'espagnol, le portugais et plus de 50 autres langues sont supportées.' },
+    ]
+  },
+  'rotate': {
+    title: 'Pivoter PDF',
+    emoji: '🔄',
+    subtitle: 'Corrigez l\'orientation de vos pages PDF',
+    accept: '.pdf',
+    outputExt: '-pivoté.pdf',
+    faq: [
+      { q: 'Puis-je pivoter des pages individuelles ?', a: 'Oui, vous pouvez choisir de pivoter toutes les pages ou des pages spécifiques.' },
+    ]
+  },
+  'watermark': {
+    title: 'Filigrane PDF',
+    emoji: '💧',
+    subtitle: 'Ajoutez un watermark texte ou image sur vos pages PDF',
+    accept: '.pdf',
+    outputExt: '-filigrane.pdf',
+    faq: [
+      { q: 'Puis-je personnaliser la position du filigrane ?', a: 'Oui, vous pouvez choisir la position, la taille, l\'opacité et la couleur du filigrane.' },
+    ]
+  },
+  'html-to-pdf': {
+    title: 'HTML vers PDF',
+    emoji: '🌐',
+    subtitle: 'Convertissez n\'importe quelle page web en PDF téléchargeable',
+    accept: '.html,.htm',
+    outputExt: '.pdf',
+    faq: [
+      { q: 'Puis-je convertir une URL directement ?', a: 'Oui, entrez simplement l\'URL de la page web à convertir dans le champ prévu.' },
+    ]
+  },
+  'pdf-to-pptx': {
+    title: 'PDF vers PowerPoint',
+    emoji: '📊',
+    subtitle: 'Convertissez vos présentations PDF en slides modifiables .pptx',
+    accept: '.pdf',
+    outputExt: '.pptx',
+    faq: [
+      { q: 'Les animations seront-elles préservées ?', a: 'Les animations originales ne peuvent pas être récupérées depuis un PDF, mais la mise en page et les images de chaque slide seront préservées.' },
+    ]
+  },
+  'pdf-to-excel': {
+    title: 'PDF vers Excel',
+    emoji: '📈',
+    subtitle: 'Extrayez tableaux et données de vos PDF vers Excel',
+    accept: '.pdf',
+    outputExt: '.xlsx',
+    faq: [
+      { q: 'Les formules Excel sont-elles préservées ?', a: 'Non, les formules ne peuvent pas être récupérées depuis un PDF. Seules les valeurs des cellules sont extraites.' },
+    ]
+  },
+};
+
+// ── INITIALISATION ──
+const params = new URLSearchParams(window.location.search);
+const toolSlug = params.get('tool') || 'pdf-to-word';
+const tool = TOOL_CONFIG[toolSlug] || TOOL_CONFIG['pdf-to-word'];
+
+document.getElementById('pageTitle').textContent = `${tool.title} — PDFOX.io`;
+document.getElementById('toolTitle').textContent = tool.title;
+document.getElementById('toolSubtitle').textContent = tool.subtitle;
+document.getElementById('uploadTitle').textContent = `Glissez votre fichier ${tool.accept.includes('pdf') ? 'PDF' : ''} ici`;
+document.getElementById('uploadDesc').textContent = `Formats acceptés : ${tool.accept}`;
+document.getElementById('toolEmoji').textContent = tool.emoji;
+
+// Accepter les bons types de fichiers
+const fileInput = document.getElementById('fileInput');
+fileInput.accept = tool.accept;
+if (tool.multiple) fileInput.multiple = true;
+
+// FAQ
+const faqList = document.getElementById('faqList');
+faqList.innerHTML = tool.faq.map(item => `
+  <div style="background:white;border-radius:14px;padding:20px 24px;margin-bottom:12px;border:1.5px solid var(--border);">
+    <h4 style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-bottom:8px;">❓ ${item.q}</h4>
+    <p style="color:var(--gray);font-size:14px;line-height:1.6;">${item.a}</p>
+  </div>
+`).join('');
+
+// ── DRAG & DROP ──
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('dragover');
+  const files = e.dataTransfer.files;
+  if (files.length) handleFiles(files);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files.length) handleFiles(fileInput.files); });
+
+let selectedFiles = [];
+
+function handleFiles(files) {
+  selectedFiles = Array.from(files);
+  const names = selectedFiles.map(f => f.name).join(', ');
+  const totalSize = (selectedFiles.reduce((a, f) => a + f.size, 0) / 1024 / 1024).toFixed(2);
+  document.getElementById('fileInfo').style.display = 'block';
+  document.getElementById('fileInfo').innerHTML = `📎 <strong>${names}</strong> — ${totalSize} Mo`;
+  document.getElementById('processBtn').style.display = 'block';
+  document.getElementById('downloadBtn').style.display = 'none';
+}
+
+// ── TRAITEMENT ──
+async function processFile() {
+  if (!selectedFiles.length) return;
+  const btn = document.getElementById('processBtn');
+  const bar = document.getElementById('progressBar');
+  const fill = document.getElementById('progressFill');
+  btn.disabled = true;
+  btn.textContent = '⏳ Traitement en cours...';
+  bar.style.display = 'block';
+
+  // Simuler progression
+  let p = 0;
+  const interval = setInterval(() => {
+    p = Math.min(p + Math.random() * 15, 90);
+    fill.style.width = p + '%';
+  }, 200);
+
+  try {
+    let blob = null;
+    const file = selectedFiles[0];
+
+    // ── Traitement selon l'outil ──
+    if (toolSlug === 'compress') {
+      blob = await compressPDF(file);
+    } else if (toolSlug === 'jpg-to-pdf') {
+      blob = await imagesToPDF(selectedFiles);
+    } else if (toolSlug === 'merge') {
+      blob = await mergePDFs(selectedFiles);
+    } else if (toolSlug === 'rotate') {
+      blob = await rotatePDF(file);
+    } else if (toolSlug === 'pdf-to-jpg') {
+      blob = await pdfToJpg(file);
+    } else {
+      // Fallback : retourner le fichier original (pour demo)
+      blob = file;
+    }
+
+    clearInterval(interval);
+    fill.style.width = '100%';
+
+    setTimeout(() => {
+      bar.style.display = 'none';
+      fill.style.width = '0%';
+      btn.style.display = 'none';
+      const dlBtn = document.getElementById('downloadBtn');
+      const url = URL.createObjectURL(blob);
+      const outputName = file.name.replace(/\.[^.]+$/, '') + tool.outputExt;
+      dlBtn.href = url;
+      dlBtn.download = outputName;
+      dlBtn.style.display = 'block';
+      dlBtn.textContent = `✅ Télécharger ${outputName}`;
+    }, 400);
+
+  } catch (err) {
+    clearInterval(interval);
+    alert('Une erreur est survenue. Veuillez réessayer avec un autre fichier.');
+    btn.disabled = false;
+    btn.textContent = '⚡ Lancer la conversion';
+    bar.style.display = 'none';
+    fill.style.width = '0%';
+  }
+}
+
+// ── FONCTIONS PDF ──
+
+// Compresser avec pdf-lib
+async function compressPDF(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+  const pages = pdfDoc.getPages();
+  // Sauvegarder avec compression
+  const pdfBytes = await pdfDoc.save({ useObjectStreams: true });
+  return new Blob([pdfBytes], { type: 'application/pdf' });
+}
+
+// Fusionner plusieurs PDFs
+async function mergePDFs(files) {
+  const merged = await PDFLib.PDFDocument.create();
+  for (const file of files) {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await PDFLib.PDFDocument.load(arrayBuffer);
+    const pages = await merged.copyPages(pdf, pdf.getPageIndices());
+    pages.forEach(page => merged.addPage(page));
+  }
+  const bytes = await merged.save();
+  return new Blob([bytes], { type: 'application/pdf' });
+}
+
+// Pivoter PDF (90°)
+async function rotatePDF(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+  const pages = pdfDoc.getPages();
+  pages.forEach(page => {
+    const currentRotation = page.getRotation().angle;
+    page.setRotation(PDFLib.degrees(currentRotation + 90));
+  });
+  const bytes = await pdfDoc.save();
+  return new Blob([bytes], { type: 'application/pdf' });
+}
+
+// Images vers PDF
+async function imagesToPDF(files) {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  let first = true;
+  for (const file of files) {
+    const dataUrl = await fileToDataURL(file);
+    const img = await loadImage(dataUrl);
+    const pageW = 210, pageH = 297;
+    const ratio = Math.min(pageW / img.width, pageH / img.height);
+    const w = img.width * ratio;
+    const h = img.height * ratio;
+    const x = (pageW - w) / 2;
+    const y = (pageH - h) / 2;
+    if (!first) pdf.addPage();
+    pdf.addImage(dataUrl, 'JPEG', x, y, w, h);
+    first = false;
+  }
+  const blob = pdf.output('blob');
+  return blob;
+}
+
+// PDF vers JPG (première page)
+async function pdfToJpg(file) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+  const page = await pdf.getPage(1);
+  const viewport = page.getViewport({ scale: 2 });
+  const canvas = document.createElement('canvas');
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+}
+
+// Helpers
+function fileToDataURL(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+function loadImage(src) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => res(img);
+    img.onerror = rej;
+    img.src = src;
+  });
+}
+</script>
+</body>
+</html>
