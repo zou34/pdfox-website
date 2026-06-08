@@ -1,1 +1,12 @@
-
+{
+  "rewrites": [
+    {
+      "source": "/tools/(.*)",
+      "destination": "/pages/tool.html"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    }
+  ]
+}
